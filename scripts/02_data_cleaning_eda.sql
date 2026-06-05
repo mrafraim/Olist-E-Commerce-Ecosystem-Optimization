@@ -1,5 +1,5 @@
 /*******************************************************************************
-Script Name:  03_data_cleaning_eda.sql
+Script Name:  02_data_cleaning_eda.sql
 Description:  Investigating data quality, missing metrics, and operational 
               timelines across the core e-commerce tables.
 Author:       Mostafizur Rahman
