@@ -288,3 +288,44 @@ A performance baseline was established across 96,470 completed deliveries to mea
 
 > **Insight:**
 > While an early delivery boosts customer satisfaction, a 23+ day shipping estimate at checkout creates a significant barrier to purchase. The operations team should recalibrate the predictive shipping algorithms to tighten this window closer to 15–18 days, unlocking higher checkout conversion rates without risking late deliveries.
+
+
+## Customer Sentiment Analysis: The Operational Cost of Slowness
+
+```sql
+-- =============================================================================
+-- STEP 5: SHIPPING VELOCITY VS. CUSTOMER SATISFACTION (REVIEW SCORES)
+-- Goal: Analyze if delivery speed and estimation accuracy directly impact 
+--       customer review scores.
+-- =============================================================================
+
+SELECT 
+    r.review_score,
+    COUNT(DISTINCT o.order_id) AS total_orders,
+    -- Average actual days to deliver
+    ROUND(AVG(EXTRACT(EPOCH FROM (o.order_delivered_customer_date - o.order_purchase_timestamp)) / 86400)::NUMERIC, 1) AS avg_actual_delivery_days,
+    -- Average days ahead of schedule (negative numbers would mean late)
+    ROUND(AVG(EXTRACT(EPOCH FROM (o.order_estimated_delivery_date - o.order_delivered_customer_date)) / 86400)::NUMERIC, 1) AS avg_days_ahead_of_schedule
+FROM olist_orders o
+JOIN olist_order_reviews r ON o.order_id = r.order_id
+WHERE o.order_status = 'delivered'
+  AND o.order_delivered_customer_date IS NOT NULL
+GROUP BY r.review_score
+ORDER BY r.review_score DESC;
+```
+Output:
+
+![SHIPPING VELOCITY VS. CUSTOMER SATISFACTION (REVIEW SCORES)](outputs/3.5.jpg)
+
+A correlation analysis across 96,013 customer reviews maps a direct link between delivery velocity and platform sentiment.
+
+* **The Core Correlation:** Delivery speed is the single greatest driver of 5-star versus 1-star experiences. 5-star orders boast an average delivery time of 10.7 days, while 1-star orders drag out to 21.3 days.
+
+* **The Operational Threshold:** Customer tolerance degrades sharply beyond 14 days of transit. Furthermore, negative reviews cluster aggressively at the extreme low end: 1-star reviews outnumber 2 and 3-star reviews combined, indicating that late deliveries completely break customer retention.
+
+> **Insight:** Logistics delays don't just delay packages; they destroy customer lifetime value. To mitigate the volume of 1-star reviews, the platform must implement automated alerts for shipments that cross the 14-day mark, allowing customer service teams to proactively manage expectations before the review is written.
+
+---
+<p style="text-align:center; color:skyblue; font-size:18px;">
+© 2026 Mostafizur Rahman
+</p>
